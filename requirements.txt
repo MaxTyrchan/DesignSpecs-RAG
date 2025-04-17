@@ -1,4 +1,7 @@
+dotenv
 langchain==0.3.21
+langchain_groq
+langchain_mistralai
 unstructured[pdf]
 poppler-utils
 Pillow
