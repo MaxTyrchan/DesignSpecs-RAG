@@ -1,32 +1,46 @@
-import { useEffect } from 'react';
-import { 
-  Container, 
-  Box, 
-  Heading, 
-  Text, 
+import {
+  Container,
+  Box,
+  Heading,
+  Text,
   useToast,
   Button,
   Flex,
-  Spinner
-} from '@chakra-ui/react';
-import { Upload } from 'lucide-react';
-import FileGrid from '../components/Files/FileGrid';
-import { useFiles } from '../context/FileContext';
+  Spinner,
+} from "@chakra-ui/react";
+import { Upload } from "lucide-react";
+import FileGrid from "../components/Files/FileGrid";
+import { useFiles } from "../context/FileContext";
+import API from "../api/api";
 
 const FilesPage = () => {
   const { files, deleteFile, isUploading } = useFiles();
   const toast = useToast();
+  const api = API.getAPI();
 
   const handleDelete = (fileId: string) => {
     deleteFile(fileId);
-    
+
     toast({
-      title: 'File deleted',
-      description: 'The file has been successfully deleted',
-      status: 'success',
+      title: "File deleted",
+      description: "The file has been successfully deleted",
+      status: "success",
       duration: 3000,
       isClosable: true,
     });
+  };
+
+  const handleAttachClick = async (event) => {
+    const data = new FormData();
+    if (event.target.files.length < 0) return;
+    data.append("file", event.target.files[0]);
+    try {
+      const response = await api.postConversation(data);
+      return response;
+    } catch (err) {
+      console.error("Error fetching conversations:", err);
+      return [];
+    }
   };
 
   return (
@@ -40,53 +54,65 @@ const FilesPage = () => {
         </Text>
       </Box>
 
-      <Flex 
-        justify="space-between" 
-        align="center" 
+      <Flex
+        justify="space-between"
+        align="center"
         mb={6}
-        direction={{ base: 'column', md: 'row' }}
+        direction={{ base: "column", md: "row" }}
         gap={4}
       >
         <Box>
           <Text fontWeight="medium">
-            {files.length} {files.length === 1 ? 'document' : 'documents'} in your library
+            {files.length} {files.length === 1 ? "document" : "documents"} in
+            your library
           </Text>
           <Text fontSize="sm" color="gray.500">
             PDF files are automatically processed for use in chat
           </Text>
         </Box>
-        
-        <Button 
-          leftIcon={<Upload size={16} />} 
+
+        <Button
+          leftIcon={<Upload size={16} />}
           colorScheme="brand"
           isLoading={isUploading}
           loadingText="Uploading..."
-          onClick={() => {
-            toast({
-              title: 'Upload from Chat',
-              description: 'Please use the chat interface to upload new documents',
-              status: 'info',
-              duration: 5000,
-              isClosable: true,
-            });
-          }}
+          position="relative"
+          overflow="hidden"
         >
           Upload Documents
+          <input
+            type="file"
+            id="file-upload"
+            name="file-upload"
+            accept=".pdf"
+            multiple
+            onChange={handleAttachClick}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              opacity: 0,
+              cursor: "pointer",
+              zIndex: 1,
+            }}
+          />
         </Button>
       </Flex>
-      
+
       {isUploading && (
         <Flex justify="center" my={8}>
           <Spinner color="brand.500" size="xl" />
         </Flex>
       )}
-      
+
       {!isUploading && files.length === 0 ? (
-        <Box 
-          p={10} 
-          borderWidth="2px" 
-          borderStyle="dashed" 
-          borderColor="gray.200" 
+        <Box
+          p={10}
+          borderWidth="2px"
+          borderStyle="dashed"
+          borderColor="gray.200"
           borderRadius="lg"
           textAlign="center"
         >
@@ -96,21 +122,18 @@ const FilesPage = () => {
           <Text color="gray.600" mb={6}>
             Upload PDF documents from the chat interface to see them here
           </Text>
-          <Button 
-            colorScheme="brand" 
+          <Button
+            colorScheme="brand"
             size="md"
             onClick={() => {
-              window.location.href = '/';
+              window.location.href = "/";
             }}
           >
             Go to Chat
           </Button>
         </Box>
       ) : (
-        <FileGrid 
-          files={files}
-          onDelete={handleDelete}
-        />
+        <FileGrid files={files} onDelete={handleDelete} />
       )}
     </Container>
   );

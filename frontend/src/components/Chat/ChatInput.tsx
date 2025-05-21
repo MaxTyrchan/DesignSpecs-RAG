@@ -1,29 +1,24 @@
-import { useState, FormEvent, useRef, useEffect } from 'react';
-import { 
-  Box, 
-  Flex, 
-  Input, 
-  IconButton, 
+import { useState, FormEvent, useRef, useEffect } from "react";
+import {
+  Box,
+  Flex,
+  Input,
+  IconButton,
   useDisclosure,
   Menu,
   MenuButton,
   MenuList,
   MenuItem,
-  Button
-} from '@chakra-ui/react';
-import { Send, Paperclip, Trash2 } from 'lucide-react';
-import { useChat } from '../../context/ChatContext';
-import ChatSidebar from './ChatSidebar';
+} from "@chakra-ui/react";
+import { Send, Trash2 } from "lucide-react";
+import { useChat } from "../../context/ChatContext";
+import ChatSidebar from "./ChatSidebar";
 
-interface ChatInputProps {
-  onAttachFiles: () => void;
-}
-
-const ChatInput = ({ onAttachFiles }: ChatInputProps) => {
-  const [input, setInput] = useState('');
+const ChatInput = () => {
+  const [input, setInput] = useState("");
   const { sendMessage, clearChat, isLoading } = useChat();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onClose } = useDisclosure();
 
   // Focus input on mount
   useEffect(() => {
@@ -35,14 +30,9 @@ const ChatInput = ({ onAttachFiles }: ChatInputProps) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-    
-    await sendMessage(input);
-    setInput('');
-  };
 
-  const handleAttachClick = () => {
-    onAttachFiles();
-    onOpen();
+    await sendMessage(input);
+    setInput("");
   };
 
   return (
@@ -56,20 +46,9 @@ const ChatInput = ({ onAttachFiles }: ChatInputProps) => {
       width="100%"
     >
       <ChatSidebar isOpen={isOpen} onClose={onClose} />
-      
+
       <form onSubmit={handleSubmit}>
         <Flex align="center" position="relative">
-          <Menu closeOnSelect={false}>
-            <MenuButton
-              as={IconButton}
-              icon={<Paperclip />}
-              variant="ghost"
-              mr={2}
-              aria-label="Attach files"
-              onClick={handleAttachClick}
-            />
-          </Menu>
-          
           <Input
             placeholder="Type your message..."
             value={input}
@@ -78,13 +57,13 @@ const ChatInput = ({ onAttachFiles }: ChatInputProps) => {
             bg="gray.50"
             borderColor="gray.300"
             _focus={{
-              borderColor: 'brand.500',
-              boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)',
+              borderColor: "brand.500",
+              boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)",
             }}
             ref={inputRef}
             disabled={isLoading}
           />
-          
+
           <Menu>
             <MenuButton
               as={IconButton}
@@ -102,7 +81,7 @@ const ChatInput = ({ onAttachFiles }: ChatInputProps) => {
               </MenuItem>
             </MenuList>
           </Menu>
-          
+
           <IconButton
             type="submit"
             aria-label="Send message"
