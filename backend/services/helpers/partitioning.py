@@ -1,6 +1,6 @@
 from docling.datamodel.base_models import DoclingDocument
 import base64
-from helpers import chunking
+
 
 def partitioning(doc: DoclingDocument):
     """
@@ -36,12 +36,12 @@ def partitioning(doc: DoclingDocument):
     except Exception as e:
         print(f"Error partitioning images: {e}")
     try:
-        #TODO: Figure out to only pass text here!
-        # Maybe use unstructured text here?
-        result = chunking(doc)
-        for chunk in enumerate(result.chunks):
-            partitioned_data["texts"].append(chunk.text)
-        partitioned_data["text_summaries"] = result.chunks_summaries
-    except Exception as e:
-        print(f"Error partitioning text: {e}")
+    #     #TODO: Figure out to only pass text here!
+    #     # Maybe use unstructured text here?
+    #     result = chunking(doc)
+    #     for chunk in enumerate(result.chunks):
+    #         partitioned_data["texts"].append(chunk.text)
+    #     partitioned_data["text_summaries"] = result.chunks_summaries
+    # except Exception as e:
+    #     print(f"Error partitioning text: {e}")
     return partitioned_data
