@@ -1,10 +1,26 @@
-FROM downloads.unstructured.io/unstructured-io/unstructured:latest
+# Use the latest version of langflow
+FROM langflowai/langflow:latest
 
-WORKDIR /src
+# Create accessible folders and set the working directory in the container
+RUN mkdir /app/flows
+RUN mkdir /app/langflow-config-dir
+WORKDIR /app
 
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the flows, optional components, and langflow-config-dir folders to the container
+COPY flows /src/flows
+COPY components /src/components
+COPY langflow-config-dir /src/langflow-config-dir
 
-COPY . /src
+# copy docker.env file
+COPY .env /app/.env
 
-CMD ["python", "main.py"]
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV LANGFLOW_LOAD_FLOWS_PATH=/app/flows
+ENV LANGFLOW_CONFIG_DIR=/app/langflow-config-dir
+ENV LANGFLOW_COMPONENTS_PATH=/app/components
+ENV LANGFLOW_LOG_ENV=container
+
+# Command to run the server
+EXPOSE 7860
+CMD ["langflow", "run", "--backend-only", "--env-file","/app/.env","--host", "0.0.0.0", "--port", "7860"]
