@@ -1,7 +1,11 @@
 import os
 from pathlib import Path
 from typing import List, Dict, Any
-from unstructured.partition.pdf import partition_pdf
+from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.datamodel.base_models import InputFormat
+from helpers import partitioning
+from helpers import chunking
 from PIL import Image
 import base64
 
@@ -21,44 +25,29 @@ class DocumentProcessor:
         Returns:
             Dictionary containing lists of extracted texts, tables, and images
         """
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_picture_description = True
+        pipeline_options.generate_picture_images = True
+        pipeline_options.images_scale = 2
+        pipeline_options.do_picture_classification = True
+
+        converter = DocumentConverter(format_options={
+            InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+        })
+
+        try:
+            result = converter.convert(file_path)
+            doc = result.document
+        except Exception as e:
+            raise Exception(f"Error converting document: {e}")
+        try:
+            partitioned_data = partitioning(doc)
+        except Exception as e:
+            raise Exception(f"Error partitioning document: {e}")
+        # Since the partitioning step already divides an entire document into its structural elements.
+        # Individual elements will only be split if they exceed the desired maximum chunk size.
+        # Two or more consecutive text elements that will together fit within max_characters will be combined.
         # Extract content using Unstructured
-        chunks = partition_pdf(
-            filename=file_path,
-            infer_table_structure=True,
-            strategy="hi_res",
-            extract_image_block_types=["Image"],
-            extract_image_block_to_payload=True,
-            chunking_strategy='by_title',
-            max_characters=50000
-        )
-
-        # Initialize containers
-        tables = []
-        texts = []
-        images = []
-
-        # Process each chunk
-        for chunk in chunks:
-            if "CompositeElement" in str(type(chunk)):
-                # Extract tables
-                # Create a copy to iterate
-                for el in chunk.metadata.orig_elements[:]:
-                    if "Table" in str(type(el)):
-                        tables.append(el.metadata.text_as_html)
-                        chunk.metadata.orig_elements.remove(el)
-                    elif "Image" in str(type(el)):
-                        images.append(el.metadata.image_base64)
-                        chunk.metadata.orig_elements.remove(el)
-
-                # Add remaining content as text
-                if chunk.metadata.orig_elements:
-                    texts.append(str(chunk))
-
-        return {
-            "texts": texts,
-            "tables": tables,
-            "images": images
-        }
 
     def save_uploaded_file(self, file_content: bytes, filename: str) -> str:
         """

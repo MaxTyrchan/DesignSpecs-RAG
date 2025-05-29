@@ -30,12 +30,11 @@ async def upload_file(file: UploadFile):
             content, file.filename)
 
         # Process the PDF
-        result = document_processor.process_pdf(file_path)
+        document_processor.process_pdf(file_path)
 
         return {
             "message": "File processed successfully",
             "filename": file.filename,
-            "content": result
         }
 
     except Exception as e:
