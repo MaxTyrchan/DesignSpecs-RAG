@@ -23,3 +23,21 @@ curl http://localhost:8000
 ```
 
 ### Local
+
+1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+2. Start the ChromaDB server
+
+```bash
+chroma run --path ./db/chroma
+```
+
+3. Run the application
+
+```bash
+uvicorn main:app --reload
+```

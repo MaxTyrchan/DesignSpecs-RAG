@@ -1,8 +1,5 @@
-from fastapi import APIRouter, UploadFile, HTTPException
-from ..services.document_processor import DocumentProcessor
-
-router = APIRouter()
-document_processor = DocumentProcessor()
+from fastapi import UploadFile, HTTPException
+from main import document_processor, router
 
 
 @router.post("/upload")
@@ -14,7 +11,7 @@ async def upload_file(file: UploadFile):
         file: The PDF file to upload
 
     Returns:
-        Processed content from the PDF including texts, tables, and images
+        Success message if the file is uploaded successfully
     """
     # Validate file type
     if not file.filename.lower().endswith('.pdf'):

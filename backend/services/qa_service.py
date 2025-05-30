@@ -1,37 +1,63 @@
 from typing import Dict, List, Any
-import os
-from openai import AzureOpenAI
-from .vector_store import VectorStore
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.prompts import ChatPromptTemplate
+from base64 import b64decode
+from main import retriever, llm
+from langchain_core.output_parsers import StrOutputParser
 
 
 class QAService:
-    def __init__(self, vector_store: VectorStore):
-        self.vector_store = vector_store
-        self.client = AzureOpenAI(
-            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-            api_version="2024-02-15-preview",
-            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+
+    def parse_answer(answers):
+        """Split base64-encoded images and texts"""
+        b64 = []
+        text = []
+        for answer in answers:
+            try:
+                b64decode(answer)
+                b64.append(answer)
+            except Exception as e:
+                text.append(answer)
+        return {"images": b64, "texts": text}
+
+    def build_prompt(kwargs):
+        answers_by_type = kwargs["context"]
+        user_question = kwargs["question"]
+
+        context_text = ""
+        if len(answers_by_type["texts"]) > 0:
+            for text_element in answers_by_type["texts"]:
+                context_text += text_element
+        # construct prompt with context (including images)
+        prompt_template = f"""
+        Answer the question based only on the following context, which can include text, tables, and the below image.
+        Context: {context_text}
+        Question: {user_question}
+        """
+
+        prompt_content = [{"type": "text", "text": prompt_template}]
+
+        if len(answers_by_type["images"]) > 0:
+            for image in answers_by_type["images"]:
+                try:
+                    # Try decoding to make sure it is valid base64
+                    decoded_image = b64decode(image, validate=True)
+                    if decoded_image:
+                        prompt_content.append(
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/jpeg;base64,{image}"},
+                            }
+                        )
+                except Exception as e:
+                    print(f"⚠️ Skipping invalid image: {e}")
+
+        return ChatPromptTemplate.from_messages(
+            [
+                HumanMessage(content=prompt_content),
+            ]
         )
-
-    def _format_context(self, search_results: Dict[str, List[Dict[str, Any]]]) -> str:
-        """
-        Format search results into a context string for the LLM.
-        """
-        context = []
-
-        # Add text content
-        if search_results["texts"]:
-            context.append("Text Content:")
-            for result in search_results["texts"]:
-                context.append(result["content"])
-
-        # Add table content
-        if search_results["tables"]:
-            context.append("\nTable Content:")
-            for result in search_results["tables"]:
-                context.append(result["content"])
-
-        return "\n\n".join(context)
 
     async def answer_question(self, question: str) -> Dict[str, Any]:
         """
@@ -43,35 +69,33 @@ class QAService:
         Returns:
             Dictionary containing the answer and relevant context
         """
-        # Search for relevant content
-        search_results = self.vector_store.search(question)
-        context = self._format_context(search_results)
 
-        # Generate system message
-        system_message = """You are a helpful assistant that answers questions about technical documents. 
-        Use the provided context to answer questions accurately and concisely. 
-        If you cannot find the answer in the context, say so."""
-
-        # Generate user message with context
-        user_message = f"""Context:
-        {context}
-        
-        Question: {question}
-        
-        Answer the question based on the context above. If the answer cannot be found in the context, say so."""
-
-        # Get response from Azure OpenAI
-        response = self.client.chat.completions.create(
-            model="gpt-4",  # Use your deployed model name
-            messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": user_message}
-            ],
-            temperature=0,
-            max_tokens=500
+        # Response without sources
+        chain = (
+            {
+                "context": retriever | RunnableLambda(self.parse_answer),
+                "question": RunnablePassthrough(),
+            }
+            | RunnableLambda(self.build_prompt)
+            | llm
+            | StrOutputParser()
         )
 
+        # Response with sources
+        chain_with_sources = {
+            "context": retriever | RunnableLambda(self.parse_answer),
+            "question": RunnablePassthrough(),
+        } | RunnablePassthrough().assign(
+            response=(
+                RunnableLambda(self.build_prompt)
+                | llm
+                | StrOutputParser()
+            )
+        )
+
+        response = chain.invoke(question)
+
         return {
-            "answer": response.choices[0].message.content,
-            "context": search_results
+            "answer": response['response'],
+            "context": response['context']
         }
