@@ -1,5 +1,8 @@
-from fastapi import UploadFile, HTTPException
-from main import document_processor, router
+from fastapi import APIRouter, UploadFile, HTTPException
+from services.dependencies import document_processor
+
+# Initialize the router
+router = APIRouter()
 
 
 @router.post("/upload")

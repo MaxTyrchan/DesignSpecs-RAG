@@ -3,8 +3,8 @@ from typing import List, Dict, Any
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.datamodel.base_models import InputFormat
-from helpers import partitioning
-from helpers import embedding
+from services.helpers.partitioning import partitioning
+from services.helpers.embedding import embedding
 
 
 class DocumentProcessor:

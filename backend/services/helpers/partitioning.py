@@ -1,6 +1,6 @@
+import base64
 from docling.datamodel.base_models import DoclingDocument
 from docling_core.types.doc.labels import DocItemLabel
-import base64
 from helpers.chunking import Chunker
 
 

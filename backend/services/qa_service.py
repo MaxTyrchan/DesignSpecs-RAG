@@ -3,7 +3,7 @@ from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from base64 import b64decode
-from main import retriever, llm
+from services.dependencies import retriever, llm
 from langchain_core.output_parsers import StrOutputParser
 
 

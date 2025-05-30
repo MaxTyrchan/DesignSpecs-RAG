@@ -36,8 +36,29 @@ pip install -r requirements.txt
 chroma run --path ./db/chroma
 ```
 
-3. Run the application
+3. Start the application
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python main.py
+```
+
+4. Run the application
 
 ```bash
 uvicorn main:app --reload
+```
+
+5. Run tests:
+
+```bash
+pytest backend/tests/
+```
+
+6. For test coverage:
+
+```bash
+pytest --cov=backend backend/tests/
 ```

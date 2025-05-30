@@ -1,5 +1,8 @@
-from fastapi import HTTPException
-from main import qa_service, router
+from fastapi import APIRouter, HTTPException
+from services.dependencies import qa_service
+
+# Initialize the router
+router = APIRouter()
 
 
 @router.post("/ask")
