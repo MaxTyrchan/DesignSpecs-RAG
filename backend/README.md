@@ -62,3 +62,9 @@ pytest backend/tests/
 ```bash
 pytest --cov=backend backend/tests/
 ```
+
+7. Shutdown the application
+
+```bash
+lsof -i :8000
+```

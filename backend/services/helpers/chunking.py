@@ -21,7 +21,7 @@ from docling_core.types.doc.document import (
     PictureItem,
     PictureMoleculeData,
 )
-from docling.datamodel.base_models import DoclingDocument
+from docling_core.types.doc.document import DoclingDocument
 
 
 class SerializerProvider(ChunkingSerializerProvider):
@@ -38,9 +38,9 @@ class SerializerProvider(ChunkingSerializerProvider):
 
 
 class Chunker(SerializerProvider):
-    def __init__(self):
+    def __init__(self, tokenizer):
         self.hybrid_chunker = HybridChunker(
-            tokenizer=self.tokenizer,
+            tokenizer=tokenizer,
             merge_peers=True,  # optional, defaults to True
             serializer_provider=SerializerProvider(),
         )

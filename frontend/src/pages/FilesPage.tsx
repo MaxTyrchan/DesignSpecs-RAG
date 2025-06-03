@@ -10,13 +10,13 @@ import {
 } from "@chakra-ui/react";
 import { Upload } from "lucide-react";
 import FileGrid from "../components/Files/FileGrid";
-import { useFiles } from "../context/FileContext";
+import { useFile } from "../context/FileContext";
 import API from "../api/api";
 
 const FilesPage = () => {
-  const { files, deleteFile, isUploading } = useFiles();
+  const { files, removeFile: deleteFile, isUploading } = useFile();
   const toast = useToast();
-  const api = API.getAPI();
+  const api = API.getInstance();
 
   const handleDelete = (fileId: string) => {
     deleteFile(fileId);
@@ -30,16 +30,18 @@ const FilesPage = () => {
     });
   };
 
-  const handleAttachClick = async (event) => {
+  const handleAttachClick = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const data = new FormData();
-    if (event.target.files.length < 0) return;
+    if (!event.target.files?.length) return;
     data.append("file", event.target.files[0]);
     try {
-      const response = await api.postConversation(data);
+      const response = await api.uploadDocument(event.target.files[0]);
       return response;
     } catch (err) {
-      console.error("Error fetching conversations:", err);
-      return [];
+      console.error("Error uploading document:", err);
+      return { success: false };
     }
   };
 

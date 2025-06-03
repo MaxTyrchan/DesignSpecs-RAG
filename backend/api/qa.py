@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from services.dependencies import qa_service
+from services.initialize import retriever, llm
+from services.qa_service import QAService
 
 # Initialize the router
 router = APIRouter()
@@ -13,6 +14,12 @@ async def ask_question(question: str):
     Returns:
         Answer and relevant context from the documents
     """
+
+    # Initialize qa service
+    qa_service = QAService()
+    qa_service.set_retriever(retriever)
+    qa_service.set_llm(llm)
+
     try:
         result = await qa_service.answer_question(question)
         return result

@@ -1,34 +1,40 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { FileData, FileContextType } from '../types/file';
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { FileData, FileContextType } from "../types/file";
+import API from "../api/api";
 
 const FileContext = createContext<FileContextType | undefined>(undefined);
 
-export const FileProvider = ({ children }: { children: ReactNode }) => {
+export const FileProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [files, setFiles] = useState<FileData[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const uploadFile = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) {
-      throw new Error('File size exceeds 10MB limit');
+      throw new Error("File size exceeds 10MB limit");
     }
 
-    if (file.type !== 'application/pdf') {
-      throw new Error('Only PDF files are supported');
+    if (file.type !== "application/pdf") {
+      throw new Error("Only PDF files are supported");
     }
 
     setIsUploading(true);
     setUploadProgress(0);
 
     try {
-      // Simulate upload with progress
-      const totalSteps = 10;
-      for (let i = 1; i <= totalSteps; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        setUploadProgress((i / totalSteps) * 100);
+      // Initialize API client
+      const api = API.getInstance();
+
+      // Upload file using API
+      const result = await api.uploadDocument(file);
+
+      if (!result.success) {
+        throw new Error(result.message);
       }
 
-      // Create file record
+      // Create file record after successful upload
       const newFile: FileData = {
         id: Date.now().toString(),
         name: file.name,
@@ -38,10 +44,10 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
         url: URL.createObjectURL(file),
       };
 
-      setFiles((prevFiles) => [...prevFiles, newFile]);
+      setFiles((prevFiles: FileData[]) => [...prevFiles, newFile]);
       return newFile.id;
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error("Error uploading file:", error);
       throw error;
     } finally {
       setIsUploading(false);
@@ -49,8 +55,10 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const deleteFile = (fileId: string) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
+  const removeFile = (fileId: string) => {
+    setFiles((prevFiles: FileData[]) =>
+      prevFiles.filter((file: FileData) => file.id !== fileId)
+    );
   };
 
   const getFile = (fileId: string) => {
@@ -64,7 +72,7 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
         isUploading,
         uploadProgress,
         uploadFile,
-        deleteFile,
+        removeFile,
         getFile,
       }}
     >
@@ -73,10 +81,10 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useFiles = () => {
+export const useFile = () => {
   const context = useContext(FileContext);
   if (context === undefined) {
-    throw new Error('useFiles must be used within a FileProvider');
+    throw new Error("useFile must be used within a FileProvider");
   }
   return context;
 };

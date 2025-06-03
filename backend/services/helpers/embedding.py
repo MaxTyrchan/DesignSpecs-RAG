@@ -1,14 +1,24 @@
-
 import uuid
+import os
 from langchain.schema.document import Document
-from main import retriever
+from langchain_openai import AzureOpenAIEmbeddings
+from dotenv import load_dotenv
+from langchain.retrievers.multi_vector import MultiVectorRetriever
+# Load environment variables
+load_dotenv()
 
 
 class Embedding:
-    def __init__(self) -> None:
+    """
+    Wraps AzureOpenAIEmbeddings (or any LangChain embedder) so that:
+      - Chroma can call .name()
+      - Chroma can call (input=[...]) to get embeddings
+    """
+
+    def __init__(self):
         self.text_item = "text_item"
 
-    def embed_pdf(self, partitioned_data):
+    def embed_pdf(self, partitioned_data, retriever: MultiVectorRetriever):
         try:
             # Add texts
             doc_ids = [str(uuid.uuid4()) for _ in partitioned_data["texts"]]
@@ -22,7 +32,7 @@ class Embedding:
             # Add tables
             table_ids = [str(uuid.uuid4()) for _ in partitioned_data["tables"]]
             summary_tables = [
-                Document(page_content=summary, metadata={self.retriever.id_key: table_ids[i]}) for i, summary in enumerate(partitioned_data["tables_summaries"])
+                Document(page_content=summary, metadata={retriever.id_key: table_ids[i]}) for i, summary in enumerate(partitioned_data["tables_summaries"])
             ]
             retriever.vectorstore.add_documents(summary_tables)
             retriever.docstore.mset(
@@ -31,7 +41,7 @@ class Embedding:
             # Add image summaries
             img_ids = [str(uuid.uuid4()) for _ in partitioned_data["images"]]
             summary_img = [
-                Document(page_content=summary, metadata={self.retriever.id_key: img_ids[i]}) for i, summary in enumerate(partitioned_data["images_summaries"])
+                Document(page_content=summary, metadata={retriever.id_key: img_ids[i]}) for i, summary in enumerate(partitioned_data["images_summaries"])
             ]
             retriever.vectorstore.add_documents(summary_img)
             retriever.docstore.mset(

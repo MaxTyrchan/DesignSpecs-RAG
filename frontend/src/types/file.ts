@@ -12,6 +12,6 @@ export interface FileContextType {
   isUploading: boolean;
   uploadProgress: number;
   uploadFile: (file: File) => Promise<string>;
-  deleteFile: (fileId: string) => void;
+  removeFile: (fileId: string) => void;
   getFile: (fileId: string) => FileData | undefined;
 }

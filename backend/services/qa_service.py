@@ -3,11 +3,19 @@ from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from base64 import b64decode
-from services.dependencies import retriever, llm
 from langchain_core.output_parsers import StrOutputParser
 
 
 class QAService:
+    def __init__(self):
+        self.retriever = None
+        self.llm = None
+
+    def set_retriever(self, retriever):
+        self.retriever = retriever
+
+    def set_llm(self, llm):
+        self.llm = llm
 
     def parse_answer(answers):
         """Split base64-encoded images and texts"""
@@ -73,22 +81,22 @@ class QAService:
         # Response without sources
         chain = (
             {
-                "context": retriever | RunnableLambda(self.parse_answer),
+                "context": self.retriever | RunnableLambda(self.parse_answer),
                 "question": RunnablePassthrough(),
             }
             | RunnableLambda(self.build_prompt)
-            | llm
+            | self.llm
             | StrOutputParser()
         )
 
         # Response with sources
         chain_with_sources = {
-            "context": retriever | RunnableLambda(self.parse_answer),
+            "context": self.retriever | RunnableLambda(self.parse_answer),
             "question": RunnablePassthrough(),
         } | RunnablePassthrough().assign(
             response=(
                 RunnableLambda(self.build_prompt)
-                | llm
+                | self.llm
                 | StrOutputParser()
             )
         )

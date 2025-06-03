@@ -1,10 +1,10 @@
 import base64
-from docling.datamodel.base_models import DoclingDocument
+from docling_core.types.doc.document import DoclingDocument
 from docling_core.types.doc.labels import DocItemLabel
-from helpers.chunking import Chunker
+from .chunking import Chunker
 
 
-def partitioning(doc: DoclingDocument):
+def partitioning(doc: DoclingDocument, chunker: Chunker):
     """
     This function is used to partition the data into different sets.
     """
@@ -18,12 +18,10 @@ def partitioning(doc: DoclingDocument):
         "tables_summaries": []
     }
 
-    chunker = Chunker()
-
     # Chunking
     try:
         chunks = chunker.chunking(doc)
-        for chunk in enumerate(chunks):
+        for chunk in chunks:
             ser_txt = chunker.hybrid_chunker.contextualize(chunk=chunk)
             for it in chunk.meta.doc_items:
                 if it.label == DocItemLabel.PICTURE:
@@ -65,5 +63,9 @@ def partitioning(doc: DoclingDocument):
                 pass
     except Exception as e:
         print(f"Error partitioning images: {e}")
+
+    # Validate that we have content
+    if not any(partitioned_data.values()):
+        raise ValueError("No content was extracted from the document")
 
     return partitioned_data

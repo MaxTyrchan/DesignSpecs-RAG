@@ -6,10 +6,17 @@ from fastapi.testclient import TestClient
 import chromadb
 from chromadb.config import Settings
 from fastapi import FastAPI
+import os
+from langchain_openai import AzureOpenAIEmbeddings
+from services.helpers.embedding import Embedding
+from services.helpers.chunking import Chunker
+from services.document_processor import DocumentProcessor
+from main import app
+from docling_core.transforms.chunker.tokenizer.openai import OpenAITokenizer
+import tiktoken
 
 from api.qa import router as qa_router
 from api.upload import router as upload_router
-from services.document_processor import DocumentProcessor
 
 
 @pytest.fixture(scope="session")
@@ -55,8 +62,8 @@ def test_client(app):
 
 @pytest.fixture(scope="function")
 def test_pdf_file():
-    """Use the existing MTS2916A.pdf file for testing"""
-    pdf_path = Path("./assets/MTS2916A.pdf")
+    """Use the MTS2916A.pdf file from test assets for testing"""
+    pdf_path = Path("tests/test_assets/MTS2916A.pdf")
     if not pdf_path.exists():
         raise FileNotFoundError(f"Test PDF file not found at {pdf_path}")
     return str(pdf_path.absolute())
@@ -75,4 +82,55 @@ def test_document_processor(test_assets_dir):
     """Create a DocumentProcessor instance with test configuration"""
     processor = DocumentProcessor()
     processor.assets_dir = test_assets_dir
+    return processor
+
+
+@pytest.fixture
+def test_pdf_path():
+    """Get the path to the test PDF file"""
+    test_assets_dir = Path("tests/test_assets")
+    test_assets_dir.mkdir(parents=True, exist_ok=True)
+    return test_assets_dir / "MTS2916A.pdf"
+
+
+@pytest.fixture
+def mock_azure_embeddings():
+    """Create a mock AzureOpenAIEmbeddings instance"""
+    class MockAzureEmbeddings:
+        def embed_documents(self, texts: list[str]) -> list[list[float]]:
+            # Return mock embeddings of dimension 1536 (same as text-embedding-3-large)
+            return [[0.1] * 1536 for _ in texts]
+
+        def embed_query(self, text: str) -> list[float]:
+            return [0.1] * 1536
+
+    return MockAzureEmbeddings()
+
+
+@pytest.fixture
+def mock_embeddings(mock_azure_embeddings):
+    """Create a mock Embedding instance"""
+    return Embedding(mock_azure_embeddings, name="mock_embeddings")
+
+
+@pytest.fixture
+def tokenizer():
+    """Create an OpenAI tokenizer instance"""
+    return OpenAITokenizer(
+        tokenizer=tiktoken.encoding_for_model("gpt-4"),
+        max_tokens=128 * 1024,
+    )
+
+
+@pytest.fixture
+def chunker(tokenizer):
+    """Create a Chunker instance"""
+    return Chunker(tokenizer)
+
+
+@pytest.fixture
+def document_processor():
+    """Create a DocumentProcessor instance"""
+    processor = DocumentProcessor()
+    processor.assets_dir = Path("tests/test_assets")
     return processor

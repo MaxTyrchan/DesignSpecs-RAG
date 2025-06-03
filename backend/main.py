@@ -1,22 +1,25 @@
+"""
+Main entry point for the application.
+Import initialize first to ensure all instances are properly initialized
+before importing other modules.
+"""
+
+# First, import initialize to set up all instances
+from services.initialize import *
+from services.document_processor import DocumentProcessor
+from services.qa_service import QAService
 import uvicorn
 import pytest
+import os
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langfuse import Langfuse
-import os
-from dotenv import load_dotenv
 from api.upload import router as upload_router
 from api.qa import router as qa_router
 from langchain.storage import LocalFileStore
 from langchain.storage._lc_store import create_kv_docstore
-from services.dependencies import *
 
-
-# Instantiate the LocalFileStore with the root path if it has no LocalFileStore inside
-if not os.Path("db/docs").exists():  # Check if directory exists
-    os.Path("db/docs").mkdir(parents=True, exist_ok=True)
-    create_kv_docstore(file_store)
-    file_store = LocalFileStore("./db/docs")
 
 # Initialize Langfuse
 langfuse = Langfuse(

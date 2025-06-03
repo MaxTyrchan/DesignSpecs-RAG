@@ -1,63 +1,92 @@
+interface UploadResponse {
+  message: string;
+  filename: string;
+}
+
+export interface QAResponse {
+  answer: string;
+  sources: string[];
+}
+
 export default class API {
   /** Singleton instance of the API class. */
-  static api: null | API;
-  api = null;
+  private static instance: API | null = null;
+  private readonly baseURL = "http://localhost:8000/api";
 
-  URL = "http://localhost:8000/api";
+  private constructor() {}
 
-  fileURL = () => `${this.URL}/file`;
-
-  static getAPI() {
-    if (this.api == null) {
-      this.api = new API();
+  static getInstance(): API {
+    if (!API.instance) {
+      API.instance = new API();
     }
-    return this.api;
+    return API.instance;
   }
 
-  fetchAdvanced(url: string, init: RequestInit) {
-    // Default initialization if not provided
-    // If no init parameter is used, create empty init
-    if (typeof init === "undefined") {
-      init = {
-        headers: {},
+  private async fetchWithError<T>(url: string, init?: RequestInit): Promise<T> {
+    const response = await fetch(url, {
+      ...init,
+      headers: {
+        ...init?.headers,
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(
+        errorData?.detail || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    return response.json();
+  }
+
+  async uploadDocument(
+    file: File
+  ): Promise<{ success: boolean; message: string }> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await this.fetchWithError<UploadResponse>(
+        `${this.baseURL}/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      return { success: true, message: response.message };
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to upload document",
       };
     }
-    // If no headers parameter is used, create empty header
-    if (typeof init.headers === "undefined") {
-      init["headers"] = {};
-    }
-
-    return fetch(url, init).then((res) => {
-      // The Promise returned from fetch() won’t reject on HTTP error status even if the response is an HTTP 404 or 500.
-      if (!res.ok) {
-        throw Error(`${res.status} ${res.statusText}`);
-      }
-      try {
-        return res.json();
-      } catch (err) {
-        console.error("Error parsing JSON", err);
-        return [];
-      }
-    });
   }
 
-  postConversation(pdfFile: FormData) {
-    // const reader = new FileReader();
-    // reader.readAsDataURL(audioFile);
-    // reader.onloadend = async () => {
-    // const base64String = reader.result?.split(",")[1];
-    // };
-
-    const url = this.fileURL();
-    console.log(pdfFile);
+  async askQuestion(question: string): Promise<QAResponse> {
     try {
-      return this.fetchAdvanced(url, {
+      return await this.fetchWithError(`${this.baseURL}/ask`, {
         method: "POST",
-        body: pdfFile,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question }),
       });
-    } catch {
-      console.error("Error posting conversation");
-      return [];
+    } catch (error) {
+      console.error("Error asking question:", error);
+      throw error;
+    }
+  }
+
+  async healthCheck(): Promise<{ status: string }> {
+    try {
+      return await this.fetchWithError(`${this.baseURL}/health`);
+    } catch (error) {
+      console.error("Error checking health:", error);
+      throw error;
     }
   }
 }

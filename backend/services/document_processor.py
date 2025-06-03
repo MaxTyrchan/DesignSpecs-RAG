@@ -1,26 +1,35 @@
+import logging
 from pathlib import Path
 from typing import List, Dict, Any
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.datamodel.base_models import InputFormat
-from services.helpers.partitioning import partitioning
-from services.helpers.embedding import embedding
+from .helpers.partitioning import partitioning
+from .helpers.embedding import Embedding
+from .helpers.chunking import Chunker
+from langchain.retrievers.multi_vector import MultiVectorRetriever
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 class DocumentProcessor:
     def __init__(self):
+        logger.info("Initializing DocumentProcessor")
         self.pipeline_options = PdfPipelineOptions()
         self.pipeline_options.do_picture_description = True
         self.pipeline_options.generate_picture_images = True
         self.pipeline_options.images_scale = 2
         self.pipeline_options.do_picture_classification = True
+
+        logger.info("Setting up document converter")
         self.converter = DocumentConverter(format_options={
             InputFormat.PDF: PdfFormatOption(
                 pipeline_options=self.pipeline_options)
         })
-        self.assets_dir = Path("backend/assets/pdfs")
+        self.assets_dir = Path("assets/pdfs")
 
-    def process_pdf(self, file_path: str) -> Dict[str, List[Any]]:
+    def process_pdf(self, file_path: str, embeddings: Embedding, chunker: Chunker, retriever: MultiVectorRetriever) -> Dict[str, List[Any]]:
         """
         Process a PDF file and extract text, tables, and images.
 
@@ -30,19 +39,40 @@ class DocumentProcessor:
         Returns:
             Dictionary containing lists of extracted texts, tables, and images
         """
+        logger.info(f"Starting PDF processing for file: {file_path}")
+
+        # Convert document
         try:
+            logger.info("Converting document")
             result = self.converter.convert(file_path)
             doc = result.document
+            if not doc:
+                raise ValueError("Document conversion produced no output")
+            logger.info("Document converted successfully")
         except Exception as e:
-            raise Exception(f"Error converting document: {e}")
+            logger.error(f"Error converting document: {str(e)}", exc_info=True)
+            raise Exception(f"Error converting document: {str(e)}")
+
+        # Partition document
         try:
-            partitioned_data = partitioning(doc)
+            logger.info("Partitioning document")
+            partitioned_data = partitioning(doc, chunker)
+            if not partitioned_data:
+                raise ValueError("Document partitioning produced no data")
+            logger.info("Document partitioned successfully")
         except Exception as e:
-            raise Exception(f"Error partitioning document: {e}")
+            logger.error(
+                f"Error partitioning document: {str(e)}", exc_info=True)
+            raise Exception(f"Error partitioning document: {str(e)}")
+
+        # Embed document
         try:
-            embedding.embed_pdf(partitioned_data)
+            logger.info("Embedding document")
+            embeddings.embed_pdf(partitioned_data, retriever)
+            logger.info("Document embedded successfully")
         except Exception as e:
-            raise Exception(f"Error embedding document: {e}")
+            logger.error(f"Error embedding document: {str(e)}", exc_info=True)
+            raise Exception(f"Error embedding document: {str(e)}")
 
     def save_uploaded_file(self, file_content: bytes, filename: str) -> str:
         """
@@ -55,11 +85,19 @@ class DocumentProcessor:
         Returns:
             Path where the file was saved
         """
-        # Create assets directory if it doesn't exist
-        self.assets_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Saving file: {filename}")
 
-        # Save the file
-        file_path = self.assets_dir / filename
-        with open(file_path, "wb") as f:
-            f.write(file_content)
-        return str(file_path)
+        try:
+            # Create assets directory if it doesn't exist
+            self.assets_dir.mkdir(parents=True, exist_ok=True)
+
+            # Save the file
+            file_path = self.assets_dir / filename
+            with open(file_path, "wb") as f:
+                f.write(file_content)
+
+            logger.info(f"File saved successfully at: {file_path}")
+            return str(file_path)
+        except Exception as e:
+            logger.error(f"Error saving file: {str(e)}", exc_info=True)
+            raise Exception(f"Error saving file: {str(e)}")
