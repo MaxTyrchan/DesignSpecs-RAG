@@ -20,19 +20,37 @@ class QAService:
 
     @staticmethod
     def parse_answer(answers):
-        """Split base64-encoded images and texts"""
-        b64 = []
+        """Split content into images, tables, and regular text based on metadata"""
+        b64_images = []
+        tables = []
         text = []
+
         for answer in answers:
-            # Decode bytes to string if needed
+            # Get the document from the retriever's docstore
             if isinstance(answer, bytes):
                 answer = answer.decode('utf-8')
-            try:
-                b64decode(answer)
-                b64.append(answer)
-            except Exception as e:
-                text.append(answer)
-        return {"images": b64, "texts": text}
+
+            # Check content type from metadata if available
+            if hasattr(answer, 'metadata') and 'content_type' in answer.metadata:
+                content_type = answer.metadata['content_type']
+                if content_type == 'image':
+                    b64_images.append(answer.metadata['image_data'])
+                elif content_type == 'table':
+                    tables.append(answer.metadata['table_content'])
+                elif content_type == 'text':
+                    text.append(answer)
+            else:
+                # Fallback to the old method for backward compatibility
+                try:
+                    b64decode(answer)
+                    b64_images.append(answer)
+                except Exception:
+                    if '|' in answer:
+                        tables.append(answer)
+                    else:
+                        text.append(answer)
+
+        return {"images": b64_images, "tables": tables, "texts": text}
 
     @staticmethod
     def build_prompt(kwargs):
@@ -40,18 +58,32 @@ class QAService:
         user_question = kwargs["question"]
 
         context_text = ""
+
+        # Add regular text
         if len(answers_by_type["texts"]) > 0:
+            context_text += "\nText Content:\n"
             for text_element in answers_by_type["texts"]:
-                context_text += text_element
+                context_text += text_element + "\n"
+
+        # Add tables
+        if len(answers_by_type.get("tables", [])) > 0:
+            context_text += "\nTable Content:\n"
+            for table in answers_by_type["tables"]:
+                context_text += table + "\n"
+
         # construct prompt with context (including images)
         prompt_template = f"""
-        Answer the question based only on the following context, which can include text, tables, and the below image.
-        Context: {context_text}
+        Answer the question based only on the following context, which includes text, tables, and images (if present).
+        
+        Context:
+        {context_text}
+        
         Question: {user_question}
         """
 
         prompt_content = [{"type": "text", "text": prompt_template}]
 
+        # Add images
         if len(answers_by_type["images"]) > 0:
             for image in answers_by_type["images"]:
                 try:

@@ -14,7 +14,11 @@ interface FileResponse {
 
 export interface QAResponse {
   answer: string;
-  sources: string[];
+  context: {
+    texts: string[];
+    tables: string[];
+    images: string[];
+  };
 }
 
 export default class API {

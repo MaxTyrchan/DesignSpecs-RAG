@@ -41,7 +41,11 @@ class Embedding:
             # Add texts
             doc_ids = [str(uuid.uuid4()) for _ in partitioned_data["texts"]]
             summary_texts = [
-                Document(page_content=summary, metadata={retriever.id_key: doc_ids[i], self.text_item: partitioned_data["texts"][i]}) for i, summary in enumerate(partitioned_data["texts_summaries"])
+                Document(page_content=summary, metadata={
+                    retriever.id_key: doc_ids[i],
+                    "content_type": "text",
+                    self.text_item: partitioned_data["texts"][i]
+                }) for i, summary in enumerate(partitioned_data["texts_summaries"])
             ]
             retriever.vectorstore.add_documents(summary_texts)
             retriever.docstore.mset(
@@ -50,7 +54,11 @@ class Embedding:
             # Add tables
             table_ids = [str(uuid.uuid4()) for _ in partitioned_data["tables"]]
             summary_tables = [
-                Document(page_content=summary, metadata={retriever.id_key: table_ids[i]}) for i, summary in enumerate(partitioned_data["tables_summaries"])
+                Document(page_content=summary, metadata={
+                    retriever.id_key: table_ids[i],
+                    "content_type": "table",
+                    "table_content": partitioned_data["tables"][i]
+                }) for i, summary in enumerate(partitioned_data["tables_summaries"])
             ]
             retriever.vectorstore.add_documents(summary_tables)
             retriever.docstore.mset(
@@ -59,7 +67,11 @@ class Embedding:
             # Add image summaries
             img_ids = [str(uuid.uuid4()) for _ in partitioned_data["images"]]
             summary_img = [
-                Document(page_content=summary, metadata={retriever.id_key: img_ids[i]}) for i, summary in enumerate(partitioned_data["images_summaries"])
+                Document(page_content=summary, metadata={
+                    retriever.id_key: img_ids[i],
+                    "content_type": "image",
+                    "image_data": partitioned_data["images"][i]
+                }) for i, summary in enumerate(partitioned_data["images_summaries"])
             ]
             retriever.vectorstore.add_documents(summary_img)
             retriever.docstore.mset(

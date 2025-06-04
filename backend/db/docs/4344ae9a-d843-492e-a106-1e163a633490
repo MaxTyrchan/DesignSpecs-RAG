@@ -1,1 +1,0 @@
-A parallel RtCt network connected to this pin sets the OFF  time  of  the  power  transistors.  The  monostable pulse generator is triggered by the output of the current sense comparator.

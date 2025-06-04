@@ -1,1 +1,0 @@
-Logic  input  to  select  the  direction  of  current  flow through the load.  A 'HIGH' logic signal level  causes load current to flow from OUTxA to OUTxB. A 'LOW' logic level causes load current to flow from OUTxB to OUTxA.

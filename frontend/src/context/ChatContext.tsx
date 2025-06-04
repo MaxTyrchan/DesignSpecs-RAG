@@ -1,76 +1,86 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-import { Message, ChatContextType } from "../types/chat";
+import React, { createContext, useContext, useState, useCallback } from "react";
+import { Message } from "../types/chat";
 import API from "../api/api";
+
+interface ChatContextType {
+  messages: Message[];
+  isLoading: boolean;
+  activeFiles: string[];
+  sendMessage: (content: string) => Promise<void>;
+  clearMessages: () => void;
+  attachFile: (fileId: string) => void;
+  removeFile: (fileId: string) => void;
+}
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-export const ChatProvider = ({ children }: { children: ReactNode }) => {
+export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeFiles, setActiveFiles] = useState<string[]>([]);
   const api = API.getInstance();
 
-  const sendMessage = async (content: string) => {
-    if (!content.trim()) return;
+  const attachFile = useCallback((fileId: string) => {
+    setActiveFiles((prev) => [...prev, fileId]);
+  }, []);
 
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content,
-      timestamp: new Date(),
-    };
+  const removeFile = useCallback((fileId: string) => {
+    setActiveFiles((prev) => prev.filter((id) => id !== fileId));
+  }, []);
 
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-    setIsLoading(true);
+  const sendMessage = useCallback(
+    async (content: string) => {
+      try {
+        // Add user message
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          content,
+          role: "user",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, userMessage]);
+        setIsLoading(true);
 
-    try {
-      const response = await api.askQuestion(content);
+        // Get response from API
+        const response = await api.askQuestion(content);
 
-      // Create AI response message
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: response.answer,
-        timestamp: new Date(),
-      };
-
-      setMessages((prevMessages) => [...prevMessages, aiResponse]);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      // Add error message
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
+        // Create assistant message with structured content
+        const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
+          content: response.answer,
+          role: "assistant",
+          timestamp: new Date(),
+          structuredContent: {
+            texts: response.context.texts || [],
+            tables: response.context.tables || [],
+            images: response.context.images || [],
+          },
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+      } catch (error) {
+        // Add error message
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: error instanceof Error ? error.message : "An error occurred",
           role: "system",
-          content:
-            error instanceof Error
-              ? error.message
-              : "An error occurred while processing your request.",
           timestamp: new Date(),
           isError: true,
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [api]
+  );
 
-  const clearChat = () => {
+  const clearMessages = useCallback(() => {
     setMessages([]);
     setActiveFiles([]);
-  };
-
-  const attachFile = (fileId: string) => {
-    if (!activeFiles.includes(fileId)) {
-      setActiveFiles((prev) => [...prev, fileId]);
-    }
-  };
-
-  const removeFile = (fileId: string) => {
-    setActiveFiles((prev) => prev.filter((id) => id !== fileId));
-  };
+  }, []);
 
   return (
     <ChatContext.Provider
@@ -79,7 +89,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         activeFiles,
         sendMessage,
-        clearChat,
+        clearMessages,
         attachFile,
         removeFile,
       }}

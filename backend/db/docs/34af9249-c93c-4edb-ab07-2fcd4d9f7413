@@ -1,1 +1,0 @@
-Comparator input for current threshold detection. The voltage  across  the  sense  resistor  is  fed  back  to  this input through the low pass filter RcCc. The power transistors are disabled when the sense voltage exceeds the  reference  voltage  of  the  selected  comparator. When this occurs, the current decays for a time set by RtCt (T OFF  = 1.1 RtCt).

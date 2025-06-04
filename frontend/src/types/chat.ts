@@ -1,9 +1,14 @@
 export interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'system';
   content: string;
+  role: "user" | "assistant" | "system";
   timestamp: Date;
   isError?: boolean;
+  structuredContent?: {
+    texts: string[];
+    tables: string[];
+    images: string[];
+  };
 }
 
 export interface ChatContextType {

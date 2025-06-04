@@ -1,6 +1,8 @@
-import { Box, Flex, Text, Avatar, Spinner } from '@chakra-ui/react';
-import { format } from 'date-fns';
-import { Message } from '../../types/chat';
+import { Box, Flex, Text, Avatar, Spinner, Image } from "@chakra-ui/react";
+import { format } from "date-fns";
+import { Message } from "../../types/chat";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatMessageProps {
   message: Message;
@@ -8,56 +10,87 @@ interface ChatMessageProps {
 }
 
 const ChatMessage = ({ message, isLast }: ChatMessageProps) => {
-  const isUser = message.role === 'user';
-  const isSystem = message.role === 'system';
+  const isUser = message.role === "user";
+  const isSystem = message.role === "system";
   const isError = message.isError;
+
+  const renderContent = () => {
+    if (isUser || !message.structuredContent) {
+      return <Text>{message.content}</Text>;
+    }
+
+    return (
+      <Box>
+        {/* Regular text content */}
+        {message.structuredContent.texts.map((text, index) => (
+          <Box key={`text-${index}`} mb={4}>
+            <ReactMarkdown>{text}</ReactMarkdown>
+          </Box>
+        ))}
+
+        {/* Tables */}
+        {message.structuredContent.tables.map((table, index) => (
+          <Box key={`table-${index}`} mb={4} overflowX="auto">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{table}</ReactMarkdown>
+          </Box>
+        ))}
+
+        {/* Images */}
+        {message.structuredContent.images.map((image, index) => (
+          <Box key={`image-${index}`} mb={4}>
+            <Image
+              src={`data:image/jpeg;base64,${image}`}
+              alt={`Image ${index + 1}`}
+              maxW="100%"
+              borderRadius="md"
+            />
+          </Box>
+        ))}
+
+        {/* Fallback content if no structured content is present */}
+        {!message.structuredContent.texts.length &&
+          !message.structuredContent.tables.length &&
+          !message.structuredContent.images.length && (
+            <Text>{message.content}</Text>
+          )}
+      </Box>
+    );
+  };
 
   return (
     <Flex
       direction="column"
-      alignItems={isUser ? 'flex-end' : 'flex-start'}
+      alignItems={isUser ? "flex-end" : "flex-start"}
       mb={4}
       w="100%"
     >
-      <Flex 
-        alignItems="center" 
-        mb={1}
-      >
+      <Flex alignItems="center" mb={1}>
         {!isUser && (
-          <Avatar 
-            size="xs" 
-            name={isSystem ? 'System' : 'Assistant'} 
-            bg={isSystem ? 'gray.500' : 'brand.500'} 
+          <Avatar
+            size="xs"
+            name={isSystem ? "System" : "Assistant"}
+            bg={isSystem ? "gray.500" : "brand.500"}
             color="white"
             mr={2}
           />
         )}
-        <Text 
-          fontSize="xs" 
-          color="gray.500"
-        >
-          {isUser ? 'You' : isSystem ? 'System' : 'Assistant'} • {format(new Date(message.timestamp), 'h:mm a')}
+        <Text fontSize="xs" color="gray.500">
+          {isUser ? "You" : isSystem ? "System" : "Assistant"} •{" "}
+          {format(new Date(message.timestamp), "h:mm a")}
         </Text>
-        {isUser && (
-          <Avatar 
-            size="xs" 
-            name="User" 
-            bg="gray.400" 
-            ml={2}
-          />
-        )}
+        {isUser && <Avatar size="xs" name="User" bg="gray.400" ml={2} />}
       </Flex>
       <Box
         maxW="80%"
         p={3}
         rounded="lg"
-        bg={isUser ? 'brand.500' : isError ? 'error.500' : 'gray.100'}
-        color={isUser || isError ? 'white' : 'gray.800'}
+        bg={isUser ? "brand.500" : isError ? "error.500" : "gray.100"}
+        color={isUser || isError ? "white" : "gray.800"}
         position="relative"
         boxShadow="sm"
       >
-        <Text>{message.content}</Text>
-        {isLast && message.role === 'assistant' && (
+        {renderContent()}
+        {isLast && message.role === "assistant" && (
           <Box
             position="absolute"
             bottom="-20px"

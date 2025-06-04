@@ -1,1 +1,0 @@
-Unused inputs  should  be  connected  to  fixed  voltage levels in order to get the highest noise immunity. Typical PCB  layout  guidelines  for  power  applications should  be  followed.  These  include  separate  power ground planes, supply decoupling capacitors close to the IC, short connections and use of maximized copper areas to improve thermal dissipation.

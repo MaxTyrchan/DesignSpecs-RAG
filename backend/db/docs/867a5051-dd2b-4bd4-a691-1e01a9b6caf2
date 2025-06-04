@@ -1,7 +1,0 @@
-The MTS2916A circuit, with external components for a typical  application,  is  shown  in  Figure 4-1.  Typical passive  component  values  are:  R S = 1  ,  R C = 1 k  , CC = 820 pF, R t = 56 k  and C t = 820 pF.
-FIGURE 4-1: Typical Application Circuit.
-
-other
-
-In this image, we can see a diagram with some text and numbers.
-During  PWM  operation,  when  the  output  stage  is turned on, large voltage peaks may appear across R S , which  can  wrongly  trigger  the  input  comparator.  To avoid  an  unstable  current  control,  an  external  R C c c filter should be used that delays the comparator action. Depending  on  load  type,  many  applications  will  not require this filter (SENSE connected to COMPIN).

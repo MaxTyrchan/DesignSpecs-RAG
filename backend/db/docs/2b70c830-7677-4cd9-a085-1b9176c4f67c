@@ -1,9 +1,0 @@
-Legend: Bold = Active MOS Transistors, Overi = Overcurrent flag, T OFF  = Channel T OFF  State Flag
-
-| I0I1     | PHASE   | Overi   | T OFF   | Case/Mode            | gna   | gpa   | gnb   | gpb   |
-|----------|---------|---------|---------|----------------------|-------|-------|-------|-------|
-| 00/01/10 | 1       | 0       | 0       | Forward ON           | L     | L     | H     | H     |
-| 00/01/10 | 1       | x       | 1       | Forward OFF          | L     | H     | H     | H     |
-| 00/01/10 | 0       | 0       | 0       | Reverse ON           | H     | H     | L     | L     |
-| 00/01/10 | 0       | x       | 1       | Reverse OFF          | H     | H     | L     | H     |
-| 11       | x       | x       | x       | No Current/ Coasting | L     | H     | L     | H     |
