@@ -4,6 +4,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from base64 import b64decode
 from langchain_core.output_parsers import StrOutputParser
+from services.initialize import langfuse_handler
 
 
 class QAService:
@@ -106,7 +107,7 @@ class QAService:
             )
         )
 
-        response = await chain_with_sources.ainvoke(question)
+        response = await chain_with_sources.ainvoke(question, config={"callbacks": [langfuse_handler]})
 
         return {
             "answer": response['response'],

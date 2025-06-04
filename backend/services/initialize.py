@@ -14,6 +14,7 @@ from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from datetime import datetime
 from .helpers.embedding import Embedding
 from .helpers.chunking import Chunker
+from langfuse.callback import CallbackHandler
 
 # Load environment variables first
 load_dotenv()
@@ -35,6 +36,12 @@ langfuse_secret_key = get_env_variable("LANGFUSE_SECRET_KEY")
 langfuse_public_key = get_env_variable("LANGFUSE_PUBLIC_KEY")
 langfuse_host = "http://localhost:3000"
 
+# Initialize Langfuse
+langfuse_handler = CallbackHandler(
+    secret_key=langfuse_secret_key,
+    public_key=langfuse_public_key,
+    host=langfuse_host
+)
 
 llm = AzureChatOpenAI(
     api_version="2024-12-01-preview",

@@ -2,6 +2,9 @@ import logging
 from fastapi import APIRouter, UploadFile, HTTPException
 from services.initialize import embeddings, chunker, retriever
 from services.document_processor import DocumentProcessor
+import os
+from pathlib import Path
+from fastapi.responses import FileResponse
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -9,6 +12,68 @@ logger = logging.getLogger(__name__)
 
 # Initialize the router
 router = APIRouter()
+
+
+@router.get("/files")
+async def list_files():
+    """
+    List all PDF files in the assets directory.
+
+    Returns:
+        List of file information
+    """
+    try:
+        document_processor = DocumentProcessor()
+        pdf_dir = Path(document_processor.assets_dir) / "pdfs"
+
+        if not pdf_dir.exists():
+            return []
+
+        files = []
+        for file_path in pdf_dir.glob("*.pdf"):
+            stat = file_path.stat()
+            files.append({
+                "id": file_path.stem,
+                "name": file_path.name,
+                "size": stat.st_size,
+                "type": "application/pdf",
+                "uploadDate": stat.st_mtime
+            })
+
+        return files
+    except Exception as e:
+        logger.error(f"Error listing files: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/download/{file_id}")
+async def download_file(file_id: str):
+    """
+    Download a PDF file by its ID.
+
+    Args:
+        file_id: The ID (stem) of the file to download
+
+    Returns:
+        The PDF file
+    """
+    try:
+        document_processor = DocumentProcessor()
+        pdf_dir = Path(document_processor.assets_dir) / "pdfs"
+
+        # Find the file with matching stem
+        for file_path in pdf_dir.glob("*.pdf"):
+            if file_path.stem == file_id:
+                return FileResponse(
+                    path=file_path,
+                    media_type="application/pdf",
+                    filename=file_path.name
+                )
+
+        raise HTTPException(status_code=404, detail="File not found")
+    except Exception as e:
+        logger.error(f"Error downloading file: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/upload")

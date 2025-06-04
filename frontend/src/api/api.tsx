@@ -4,6 +4,14 @@ interface UploadResponse {
   fileId: string;
 }
 
+interface FileResponse {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  uploadDate: number;
+}
+
 export interface QAResponse {
   answer: string;
   sources: string[];
@@ -40,6 +48,21 @@ export default class API {
     }
 
     return response.json();
+  }
+
+  async listFiles(): Promise<FileResponse[]> {
+    try {
+      const files = await this.fetchWithError<FileResponse[]>(
+        `${this.baseURL}/files`
+      );
+      return files.map((file) => ({
+        ...file,
+        uploadDate: file.uploadDate * 1000, // Convert from Unix timestamp to JS timestamp
+      }));
+    } catch (error) {
+      console.error("Error listing files:", error);
+      return [];
+    }
   }
 
   async uploadDocument(

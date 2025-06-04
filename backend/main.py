@@ -21,13 +21,6 @@ from langchain.storage import LocalFileStore
 from langchain.storage._lc_store import create_kv_docstore
 
 
-# Initialize Langfuse
-langfuse = Langfuse(
-    secret_key=langfuse_secret_key,
-    public_key=langfuse_public_key,
-    host=langfuse_host
-)
-
 # Initialize FastAPI app
 app = FastAPI(
     title="DesignSpecs RAG API",

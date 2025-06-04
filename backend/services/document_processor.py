@@ -8,6 +8,7 @@ from .helpers.partitioning import partitioning
 from .helpers.embedding import Embedding
 from .helpers.chunking import Chunker
 from langchain.retrievers.multi_vector import MultiVectorRetriever
+import os
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -27,7 +28,11 @@ class DocumentProcessor:
             InputFormat.PDF: PdfFormatOption(
                 pipeline_options=self.pipeline_options)
         })
-        self.assets_dir = Path("assets/pdfs")
+
+        # Get the path relative to the backend directory
+        current_dir = Path(__file__).parent  # services directory
+        backend_dir = current_dir.parent     # backend directory
+        self.assets_dir = backend_dir / "assets"
 
     def process_pdf(self, file_path: str, embeddings: Embedding, chunker: Chunker, retriever: MultiVectorRetriever) -> Dict[str, List[Any]]:
         """

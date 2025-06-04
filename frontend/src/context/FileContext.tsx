@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { FileData, FileContextType } from "../types/file";
 import API from "../api/api";
 
@@ -10,6 +16,21 @@ export const FileProvider: React.FC<{ children: ReactNode }> = ({
   const [files, setFiles] = useState<FileData[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  useEffect(() => {
+    const loadFiles = async () => {
+      const api = API.getInstance();
+      const fileList = await api.listFiles();
+      setFiles(
+        fileList.map((file) => ({
+          ...file,
+          uploadDate: new Date(file.uploadDate),
+        }))
+      );
+    };
+
+    loadFiles();
+  }, []);
 
   const uploadFile = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) {
