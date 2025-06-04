@@ -48,8 +48,10 @@ export const FileProvider: React.FC<{ children: ReactNode }> = ({
       // Initialize API client
       const api = API.getInstance();
 
-      // Upload file using API
-      const result = await api.uploadDocument(file);
+      // Upload file using API with progress tracking
+      const result = await api.uploadDocument(file, (progress) => {
+        setUploadProgress(progress);
+      });
 
       if (!result.success) {
         throw new Error(result.message);

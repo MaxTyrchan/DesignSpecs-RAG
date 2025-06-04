@@ -66,8 +66,8 @@ chunker = Chunker()
 # Initialize embeddings instance
 embeddings = Embedding(embeddingModel)
 
-# Initialize Chroma
-chroma_client = chromadb.Client()
+# Initialize Chroma with persistent storage
+chroma_client = chromadb.PersistentClient(path="./db/chroma")
 
 collection = chroma_client.get_or_create_collection(
     name="DesignSpecsRAG",

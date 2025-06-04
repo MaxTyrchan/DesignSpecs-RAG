@@ -81,7 +81,7 @@ class DocumentProcessor:
 
     def save_uploaded_file(self, file_content: bytes, filename: str) -> str:
         """
-        Save an uploaded file to the assets directory.
+        Save an uploaded file to the assets/pdfs directory.
 
         Args:
             file_content: Binary content of the file
@@ -93,11 +93,12 @@ class DocumentProcessor:
         logger.info(f"Saving file: {filename}")
 
         try:
-            # Create assets directory if it doesn't exist
-            self.assets_dir.mkdir(parents=True, exist_ok=True)
+            # Create assets/pdfs directory if it doesn't exist
+            pdf_dir = self.assets_dir / "pdfs"
+            pdf_dir.mkdir(parents=True, exist_ok=True)
 
             # Save the file
-            file_path = self.assets_dir / filename
+            file_path = pdf_dir / filename
             with open(file_path, "wb") as f:
                 f.write(file_content)
 

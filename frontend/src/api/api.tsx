@@ -70,19 +70,43 @@ export default class API {
   }
 
   async uploadDocument(
-    file: File
+    file: File,
+    onProgress?: (progress: number) => void
   ): Promise<{ success: boolean; message: string; fileId: string }> {
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      const response = await this.fetchWithError<UploadResponse>(
-        `${this.baseURL}/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const xhr = new XMLHttpRequest();
+      const promise = new Promise<UploadResponse>((resolve, reject) => {
+        xhr.upload.addEventListener("progress", (event) => {
+          if (event.lengthComputable && onProgress) {
+            const progress = Math.round((event.loaded * 100) / event.total);
+            onProgress(progress);
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText));
+          } else {
+            reject(new Error(`HTTP error! status: ${xhr.status}`));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Network error occurred"));
+        });
+
+        xhr.addEventListener("abort", () => {
+          reject(new Error("Upload aborted"));
+        });
+      });
+
+      xhr.open("POST", `${this.baseURL}/upload`);
+      xhr.send(formData);
+
+      const response = await promise;
       return {
         success: true,
         message: response.message,
