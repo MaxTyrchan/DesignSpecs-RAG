@@ -1,0 +1,1 @@
+Logic supply ground. Only the driver current flows out of this pin; there is no high current. Minimize voltage drops between this pin and the logic inputs.

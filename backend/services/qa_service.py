@@ -17,11 +17,15 @@ class QAService:
     def set_llm(self, llm):
         self.llm = llm
 
+    @staticmethod
     def parse_answer(answers):
         """Split base64-encoded images and texts"""
         b64 = []
         text = []
         for answer in answers:
+            # Decode bytes to string if needed
+            if isinstance(answer, bytes):
+                answer = answer.decode('utf-8')
             try:
                 b64decode(answer)
                 b64.append(answer)
@@ -29,6 +33,7 @@ class QAService:
                 text.append(answer)
         return {"images": b64, "texts": text}
 
+    @staticmethod
     def build_prompt(kwargs):
         answers_by_type = kwargs["context"]
         user_question = kwargs["question"]
@@ -101,7 +106,7 @@ class QAService:
             )
         )
 
-        response = chain.invoke(question)
+        response = await chain_with_sources.ainvoke(question)
 
         return {
             "answer": response['response'],

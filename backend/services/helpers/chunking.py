@@ -22,6 +22,7 @@ from docling_core.types.doc.document import (
     PictureMoleculeData,
 )
 from docling_core.types.doc.document import DoclingDocument
+from docling_core.transforms.chunker.tokenizer.openai import OpenAITokenizer
 
 
 class SerializerProvider(ChunkingSerializerProvider):
@@ -38,9 +39,13 @@ class SerializerProvider(ChunkingSerializerProvider):
 
 
 class Chunker(SerializerProvider):
-    def __init__(self, tokenizer):
+    def __init__(self):
+        self.tokenizer = OpenAITokenizer(
+            tokenizer=tiktoken.encoding_for_model("gpt-4o"),
+            max_tokens=128 * 1024,  # context window length required for OpenAI tokenizers
+        )
         self.hybrid_chunker = HybridChunker(
-            tokenizer=tokenizer,
+            tokenizer=self.tokenizer,
             merge_peers=True,  # optional, defaults to True
             serializer_provider=SerializerProvider(),
         )

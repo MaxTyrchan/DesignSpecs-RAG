@@ -6,12 +6,11 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import tiktoken
-from docling_core.transforms.chunker.tokenizer.openai import OpenAITokenizer
 import chromadb
 from langchain.storage import LocalFileStore
 from langchain_chroma import Chroma
 from langchain.retrievers.multi_vector import MultiVectorRetriever
-from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
+from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from datetime import datetime
 from .helpers.embedding import Embedding
 from .helpers.chunking import Chunker
@@ -36,13 +35,6 @@ langfuse_secret_key = get_env_variable("LANGFUSE_SECRET_KEY")
 langfuse_public_key = get_env_variable("LANGFUSE_PUBLIC_KEY")
 langfuse_host = "http://localhost:3000"
 
-# Initialize Azure OpenAI
-azure_embeddings = AzureOpenAIEmbeddings(
-    model="text-embedding-3-large",
-    api_version="2024-12-01-preview",
-    azure_endpoint=azure_embeddings_endpoint,
-    api_key=azure_api_key,
-)
 
 llm = AzureChatOpenAI(
     api_version="2024-12-01-preview",
@@ -52,27 +44,24 @@ llm = AzureChatOpenAI(
     model="gpt-4o"
 )
 
-# Initialize tokenizer
-tokenizer = OpenAITokenizer(
-    tokenizer=tiktoken.encoding_for_model("gpt-4o"),
-    max_tokens=128 * 1024,  # context window length required for OpenAI tokenizers
+embeddingModel = AzureOpenAIEmbeddings(
+    model="text-embedding-3-large",
+    api_version="2024-12-01-preview",
+    azure_endpoint=azure_embeddings_endpoint,
+    api_key=azure_api_key,
 )
-
-# Initialize chunker
-chunker = Chunker(tokenizer)
-
-# Initialize storage paths
-docs_path = Path("db/docs")
-if not docs_path.exists():
-    docs_path.mkdir(parents=True, exist_ok=True)
 
 file_store = LocalFileStore("./db/docs")
 
+# Initialize chunker
+chunker = Chunker()
+
 # Initialize embeddings instance
-embeddings = Embedding(azure_embeddings, name="text-embedding-3-large")
+embeddings = Embedding(embeddingModel)
 
 # Initialize Chroma
 chroma_client = chromadb.Client()
+
 collection = chroma_client.get_or_create_collection(
     name="DesignSpecsRAG",
     embedding_function=embeddings,

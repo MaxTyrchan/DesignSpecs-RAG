@@ -1,6 +1,7 @@
 interface UploadResponse {
   message: string;
   filename: string;
+  fileId: string;
 }
 
 export interface QAResponse {
@@ -43,7 +44,7 @@ export default class API {
 
   async uploadDocument(
     file: File
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<{ success: boolean; message: string; fileId: string }> {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -55,15 +56,28 @@ export default class API {
           body: formData,
         }
       );
-      return { success: true, message: response.message };
+      return {
+        success: true,
+        message: response.message,
+        fileId: response.fileId,
+      };
     } catch (error) {
       console.error("Error uploading document:", error);
       return {
         success: false,
         message:
           error instanceof Error ? error.message : "Failed to upload document",
+        fileId: "",
       };
     }
+  }
+
+  async downloadDocument(fileId: string): Promise<Blob> {
+    const response = await fetch(`${this.baseURL}/download/${fileId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.blob();
   }
 
   async askQuestion(question: string): Promise<QAResponse> {

@@ -1,0 +1,18 @@
+XX...X
+Customer-specific information
+Y
+Year code (last digit of calendar year)
+YY
+Year code (last 2 digits of calendar year)
+WW
+Week code (week of January 1 is week '01')
+NNN
+Alphanumeric traceability code
+Pb-free JEDEC designator for Matte Tin (Sn)
+*
+This package is Pb-free. The Pb-free JEDEC designator (     ) 3 e
+can be found on the outer packaging for this package.
+3
+e
+Note :
+In the event the full Microchip part number cannot be marked on one line, it will be  carried  over  to  the  next  line,  thus  limiting  the  number  of  available characters for customer-specific information.

@@ -36,12 +36,11 @@ export const FileProvider: React.FC<{ children: ReactNode }> = ({
 
       // Create file record after successful upload
       const newFile: FileData = {
-        id: Date.now().toString(),
+        id: result.fileId,
         name: file.name,
         size: file.size,
         type: file.type,
         uploadDate: new Date(),
-        url: URL.createObjectURL(file),
       };
 
       setFiles((prevFiles: FileData[]) => [...prevFiles, newFile]);

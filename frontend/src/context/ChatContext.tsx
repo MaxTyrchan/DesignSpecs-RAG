@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { Message, ChatContextType } from '../types/chat';
+import { createContext, useContext, useState, ReactNode } from "react";
+import { Message, ChatContextType } from "../types/chat";
+import API from "../api/api";
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
@@ -7,6 +8,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeFiles, setActiveFiles] = useState<string[]>([]);
+  const api = API.getInstance();
 
   const sendMessage = async (content: string) => {
     if (!content.trim()) return;
@@ -14,40 +16,38 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
-      role: 'user',
+      role: "user",
       content,
       timestamp: new Date(),
     };
-    
+
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setIsLoading(true);
 
     try {
-      // Simulate API call with delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      // Mock response
+      const response = await api.askQuestion(content);
+
+      // Create AI response message
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `This is a simulated response to: "${content}"${
-          activeFiles.length > 0 
-            ? ` I've analyzed the files you provided: ${activeFiles.join(', ')}.` 
-            : ''
-        }`,
+        role: "assistant",
+        content: response.answer,
         timestamp: new Date(),
       };
-      
+
       setMessages((prevMessages) => [...prevMessages, aiResponse]);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
       // Add error message
       setMessages((prevMessages) => [
         ...prevMessages,
         {
           id: (Date.now() + 1).toString(),
-          role: 'system',
-          content: 'There was an error processing your request.',
+          role: "system",
+          content:
+            error instanceof Error
+              ? error.message
+              : "An error occurred while processing your request.",
           timestamp: new Date(),
           isError: true,
         },
@@ -92,7 +92,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 export const useChat = () => {
   const context = useContext(ChatContext);
   if (context === undefined) {
-    throw new Error('useChat must be used within a ChatProvider');
+    throw new Error("useChat must be used within a ChatProvider");
   }
   return context;
 };

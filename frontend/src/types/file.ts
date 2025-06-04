@@ -4,7 +4,6 @@ export interface FileData {
   size: number;
   type: string;
   uploadDate: Date;
-  url: string;
 }
 
 export interface FileContextType {

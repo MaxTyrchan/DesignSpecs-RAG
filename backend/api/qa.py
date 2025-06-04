@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from services.initialize import retriever, llm
 from services.qa_service import QAService
 
@@ -6,8 +7,12 @@ from services.qa_service import QAService
 router = APIRouter()
 
 
+class QuestionRequest(BaseModel):
+    question: str
+
+
 @router.post("/ask")
-async def ask_question(question: str):
+async def ask_question(request: QuestionRequest):
     """
     Answer a question about the uploaded documents.
 
@@ -21,7 +26,7 @@ async def ask_question(question: str):
     qa_service.set_llm(llm)
 
     try:
-        result = await qa_service.answer_question(question)
+        result = await qa_service.answer_question(request.question)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

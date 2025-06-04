@@ -4,6 +4,7 @@ from langchain.schema.document import Document
 from langchain_openai import AzureOpenAIEmbeddings
 from dotenv import load_dotenv
 from langchain.retrievers.multi_vector import MultiVectorRetriever
+
 # Load environment variables
 load_dotenv()
 
@@ -15,8 +16,25 @@ class Embedding:
       - Chroma can call (input=[...]) to get embeddings
     """
 
-    def __init__(self):
+    def __init__(self, embeddingModel):
+        self.embeddings = embeddingModel
         self.text_item = "text_item"
+
+    def __call__(self, input):
+        # This method is called by Chroma to get embeddings
+        return self.embeddings.embed_documents(input)
+
+    def name(self):
+        # Required by Chroma
+        return "AzureOpenAIEmbeddings"
+
+    def embed_documents(self, texts):
+        # Delegate to the underlying embeddings model
+        return self.embeddings.embed_documents(texts)
+
+    def embed_query(self, text):
+        # Delegate to the underlying embeddings model
+        return self.embeddings.embed_query(text)
 
     def embed_pdf(self, partitioned_data, retriever: MultiVectorRetriever):
         try:
@@ -27,7 +45,7 @@ class Embedding:
             ]
             retriever.vectorstore.add_documents(summary_texts)
             retriever.docstore.mset(
-                list(zip(doc_ids, partitioned_data["texts"])))
+                list(zip(doc_ids, [text.encode('utf-8') for text in partitioned_data["texts"]])))
 
             # Add tables
             table_ids = [str(uuid.uuid4()) for _ in partitioned_data["tables"]]
@@ -36,7 +54,7 @@ class Embedding:
             ]
             retriever.vectorstore.add_documents(summary_tables)
             retriever.docstore.mset(
-                list(zip(table_ids, partitioned_data["tables"])))
+                list(zip(table_ids, [table.encode('utf-8') for table in partitioned_data["tables"]])))
 
             # Add image summaries
             img_ids = [str(uuid.uuid4()) for _ in partitioned_data["images"]]
@@ -45,6 +63,6 @@ class Embedding:
             ]
             retriever.vectorstore.add_documents(summary_img)
             retriever.docstore.mset(
-                list(zip(img_ids, partitioned_data["images"])))
+                list(zip(img_ids, [img.encode('utf-8') for img in partitioned_data["images"]])))
         except Exception as e:
             raise Exception(f"Error embedding document: {e}")

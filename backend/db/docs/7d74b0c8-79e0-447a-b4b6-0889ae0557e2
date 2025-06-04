@@ -1,0 +1,7 @@
+The circuit is designed to drive the two windings of a bipolar stepper motor, and can be divided into two identical channels (channel 1 and channel 2) and protection circuitry  for  overtemperature  and  undervoltage.  The functionality  of  a  channel  and  protection  circuitry  is presented in the following sections.
+Each  motor  winding  is  driven  by  an  H-type  bridge consisting of two N- and two P-transistors that allow the current to flow in both winding directions, depending on the value of the PHASE  signal  (Table 3-1). The H-bridge  can  be  set  in  five  configurations  that  are related to the digital inputs PHASE, I0 and I1, and to the current  sensed.  These  configurations  are  shown  in Table 3-2.
+FIGURE 3-1: Power Bridge Control (PHASE = H/Forward).
+
+bar chart
+
+The image shows a diagram with a series of arrows pointing from one arrow to another. The arrows are labeled with the following text: "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "VL", "V

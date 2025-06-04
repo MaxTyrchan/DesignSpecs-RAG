@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { 
-  Box, 
-  Flex, 
-  Text, 
-  IconButton, 
+import { useState } from "react";
+import {
+  Box,
+  Flex,
+  Text,
+  IconButton,
   Menu,
   MenuButton,
   MenuList,
@@ -23,33 +23,65 @@ import {
   Table,
   Tbody,
   Tr,
-  Td
-} from '@chakra-ui/react';
-import { MoreVertical, Trash2, Info, Download } from 'lucide-react';
-import { FileData } from '../../types/file';
-import { format } from 'date-fns';
+  Td,
+  useToast,
+} from "@chakra-ui/react";
+import { MoreVertical, Trash2, Info, Download } from "lucide-react";
+import { FileData } from "../../types/file";
+import { format } from "date-fns";
+import API from "../../api/api";
 
 interface FileCardProps {
   file: FileData;
   onDelete: (fileId: string) => void;
-  viewType: 'grid' | 'list';
+  viewType: "grid" | "list";
 }
 
 const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  
+  const toast = useToast();
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B';
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-    else return (bytes / 1048576).toFixed(1) + ' MB';
+    if (bytes < 1024) return bytes + " B";
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+    else return (bytes / 1048576).toFixed(1) + " MB";
   };
-  
-  const formattedDate = format(new Date(file.uploadDate), 'MMM d, yyyy');
-  
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const api = API.getInstance();
+      const blob = await api.downloadDocument(file.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      toast({
+        title: "Download failed",
+        description:
+          error instanceof Error ? error.message : "Failed to download file",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const formattedDate = format(new Date(file.uploadDate), "MMM d, yyyy");
+
   // PDF thumbnail placeholder
-  const pdfThumbnail = "https://images.pexels.com/photos/46274/pexels-photo-46274.jpeg?auto=compress&cs=tinysrgb&w=300";
-  
-  if (viewType === 'grid') {
+  const pdfThumbnail =
+    "https://images.pexels.com/photos/46274/pexels-photo-46274.jpeg?auto=compress&cs=tinysrgb&w=300";
+
+  if (viewType === "grid") {
     return (
       <>
         <Box
@@ -59,8 +91,8 @@ const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
           bg="white"
           transition="transform 0.2s, box-shadow 0.2s"
           _hover={{
-            transform: 'translateY(-2px)',
-            boxShadow: 'md',
+            transform: "translateY(-2px)",
+            boxShadow: "md",
           }}
         >
           <Box position="relative" h="150px" bg="gray.100">
@@ -71,17 +103,17 @@ const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
               w="100%"
               h="100%"
             />
-            <Badge 
-              position="absolute" 
-              top={2} 
-              right={2} 
+            <Badge
+              position="absolute"
+              top={2}
+              right={2}
               colorScheme="brand"
               fontSize="xs"
             >
               PDF
             </Badge>
           </Box>
-          
+
           <Box p={4}>
             <Flex justify="space-between" align="start">
               <Box>
@@ -94,7 +126,7 @@ const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
                   <Text>{formattedDate}</Text>
                 </HStack>
               </Box>
-              
+
               <Menu>
                 <MenuButton
                   as={IconButton}
@@ -107,10 +139,18 @@ const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
                   <MenuItem icon={<Info size={16} />} onClick={onOpen}>
                     View details
                   </MenuItem>
-                  <MenuItem icon={<Download size={16} />}>
-                    Download
+                  <MenuItem
+                    icon={<Download size={16} />}
+                    onClick={handleDownload}
+                    isDisabled={isDownloading}
+                  >
+                    {isDownloading ? "Downloading..." : "Download"}
                   </MenuItem>
-                  <MenuItem icon={<Trash2 size={16} />} onClick={() => onDelete(file.id)} color="red.500">
+                  <MenuItem
+                    icon={<Trash2 size={16} />}
+                    onClick={() => onDelete(file.id)}
+                    color="red.500"
+                  >
                     Delete
                   </MenuItem>
                 </MenuList>
@@ -118,7 +158,7 @@ const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
             </Flex>
           </Box>
         </Box>
-        
+
         <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
@@ -141,7 +181,7 @@ const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
                   </Tr>
                   <Tr>
                     <Td fontWeight="medium">Uploaded</Td>
-                    <Td>{format(new Date(file.uploadDate), 'PPP')}</Td>
+                    <Td>{format(new Date(file.uploadDate), "PPP")}</Td>
                   </Tr>
                 </Tbody>
               </Table>
@@ -167,23 +207,23 @@ const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
           bg="white"
           transition="background 0.2s"
           _hover={{
-            bg: 'gray.50',
+            bg: "gray.50",
           }}
         >
-          <Box 
-            w="40px" 
-            h="40px" 
-            bg="brand.50" 
-            borderRadius="md" 
-            display="flex" 
-            alignItems="center" 
+          <Box
+            w="40px"
+            h="40px"
+            bg="brand.50"
+            borderRadius="md"
+            display="flex"
+            alignItems="center"
             justifyContent="center"
             color="brand.500"
             mr={4}
           >
             PDF
           </Box>
-          
+
           <Box flex="1" minW="0">
             <Text fontWeight="medium" isTruncated>
               {file.name}
@@ -194,7 +234,7 @@ const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
               <Text>{formattedDate}</Text>
             </HStack>
           </Box>
-          
+
           <Menu>
             <MenuButton
               as={IconButton}
@@ -207,16 +247,24 @@ const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
               <MenuItem icon={<Info size={16} />} onClick={onOpen}>
                 View details
               </MenuItem>
-              <MenuItem icon={<Download size={16} />}>
-                Download
+              <MenuItem
+                icon={<Download size={16} />}
+                onClick={handleDownload}
+                isDisabled={isDownloading}
+              >
+                {isDownloading ? "Downloading..." : "Download"}
               </MenuItem>
-              <MenuItem icon={<Trash2 size={16} />} onClick={() => onDelete(file.id)} color="red.500">
+              <MenuItem
+                icon={<Trash2 size={16} />}
+                onClick={() => onDelete(file.id)}
+                color="red.500"
+              >
                 Delete
               </MenuItem>
             </MenuList>
           </Menu>
         </Flex>
-        
+
         <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
@@ -239,7 +287,7 @@ const FileCard = ({ file, onDelete, viewType }: FileCardProps) => {
                   </Tr>
                   <Tr>
                     <Td fontWeight="medium">Uploaded</Td>
-                    <Td>{format(new Date(file.uploadDate), 'PPP')}</Td>
+                    <Td>{format(new Date(file.uploadDate), "PPP")}</Td>
                   </Tr>
                 </Tbody>
               </Table>

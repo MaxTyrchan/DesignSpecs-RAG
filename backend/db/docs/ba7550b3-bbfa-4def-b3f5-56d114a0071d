@@ -1,0 +1,10 @@
+· Stepper Motor Actuators
+· DC Motor Actuators
+· Automotive HVAC Ventilation
+· Automotive Power Seats
+Note:
+The  MTS2916A  device  is  formerly a product of Advanced Silicon.
+The  MTS2916A  motor  driver  is  a  CMOS  device capable of driving both windings of a bipolar stepper motor or bidirectionally control two DC motors. Each of the  two  independent  H-bridge  outputs  is  capable  of sustaining 40V and delivering up to 750 mA  of continuous current. The output current level is controlled by an internal pulse-width modulation (PWM) circuit that is configured using two logic inputs, a  current  sense  resistor  and  a  selectable  reference voltage. The H-bridge outputs have been optimized to provide a low output saturation voltage drop.
+Full, half, and micro-stepping operations are possible with  the  PWM  current  control  and  logic  inputs.  The maximum output current is set by a sensing resistor and  a  user  selectable  reference  voltage.  The  output current limit is selected using two logic level inputs. The selectable output current limits are 0%, 33%, 67%, or 100% of the maximum output current. Each bridge has a PHASE input signal which is used to control the direction of current flow through the H-bridge and the load.
+The H-bridge power stage is controlled by non-overlapping  signals  which  prevent  current  cross  conduction when switching the direction of the current flow. Internal clamp  diodes  protect  against  inductive  transients. Thermal protection circuitry disables the outputs when the  junction  temperature  exceeds  the  safe  operating limit.  No  special  power-up  sequencing  is  required. Undervoltage Lockout circuitry prevents the chip from operating when the load supply is applied prior to the logic supply.
+The device is supplied in a 24-pin SOP package.

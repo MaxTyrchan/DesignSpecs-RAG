@@ -1,0 +1,29 @@
+Note: For the most current package drawings, please see the Microchip Packaging Specification located at http://www.microchip.com/packaging.
+other
+
+The image depicts a technical diagram of a cylindrical object, which appears to be a part of a larger system or a part of a system. The diagram is labeled with the following information:
+
+- **Object Description:**
+  - The object is a cylindrical object with a diameter of 13 cm.
+  - The object is labeled as "13" in the diagram.
+  - The object is labeled as "0.020X4" in the diagram.
+  - The object is labeled as "0.016" in the diagram.
+  - The object is labeled as "0.05" in the diagram.
+  - The object is labeled as "0.08" in the diagram.
+  - The object is labeled as "0.01" in the diagram.
+  - The object is labeled as "0.01" in the diagram.
+  - The object is labeled as "0.01" in the diagram.
+Note: The package drawing dimensions are expressed in inches.
+| Symbol   | Minimum        | Typical        | Maximum        | Unit      |
+|----------|----------------|----------------|----------------|-----------|
+| A        | -              | -              | 2.642 (0.104)  | mm(inch)  |
+| A1       | 0.102 (0.004)  | -              | -              | mm (inch) |
+| D        | 15.545 (0.612) | 15.697 (0.618) | 15.850 (0.624) | mm (inch) |
+| E        | 7.417 (0.292)  | 7.518 (0.296)  | 7.595 (0.299)  | mm(inch)  |
+| H        | 10.287 (0.405) | 10.464 (0.412) | 10.643 (0.419) | mm (inch) |
+| L        | 0.533 (0.021)  | 0.787 (0.031)  | 1.041 (0.041)  | mm(inch)  |
+| J        | 0              | 4              | 8              | °         |
+Note
+1: JEDEC outline: M0-119 AA
+2: Dimensions 'D' does not include mold flash, protrusions or gate burrs. Mold flash, protrusions and gate burrs should not exceed 0.25mm (0.010inch) per side.
+3: Dimensions 'E' does not include inter-lead flash, or protrusions. Inter-lead flash and protrusions shall not exceed 0.25mm (0.010 inch) per side.

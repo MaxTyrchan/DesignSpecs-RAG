@@ -1,0 +1,1 @@
+Reference voltage for current sense comparator. Determines the level of output current detection together with sensing resistor and inputs I0x, I1x.

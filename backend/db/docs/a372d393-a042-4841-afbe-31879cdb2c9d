@@ -1,0 +1,4 @@
+| PHASE   | Output Current                    |
+|---------|-----------------------------------|
+| L       | Current flows from OUTxB to OUTxA |
+| H       | Current flows from OUTxA to OUTxB |
