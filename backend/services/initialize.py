@@ -66,8 +66,19 @@ chunker = Chunker()
 # Initialize embeddings instance
 embeddings = Embedding(embeddingModel)
 
-# Initialize Chroma with persistent storage
-chroma_client = chromadb.PersistentClient(path="./db/chroma")
+# Ensure the database directory exists with proper permissions
+db_path = Path("./db/chroma")
+db_path.mkdir(parents=True, exist_ok=True)
+
+# Initialize Chroma with persistent storage and proper settings
+chroma_client = chromadb.PersistentClient(
+    path=str(db_path),
+    settings=chromadb.Settings(
+        allow_reset=True,
+        is_persistent=True,
+        anonymized_telemetry=False
+    )
+)
 
 collection = chroma_client.get_or_create_collection(
     name="DesignSpecsRAG",

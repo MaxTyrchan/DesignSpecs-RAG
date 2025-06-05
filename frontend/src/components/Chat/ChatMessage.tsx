@@ -3,11 +3,31 @@ import { format } from "date-fns";
 import { Message } from "../../types/chat";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { CSSProperties } from "react";
 
 interface ChatMessageProps {
   message: Message;
   isLast?: boolean;
 }
+
+const tableStyles: Record<string, CSSProperties> = {
+  table: {
+    borderCollapse: "collapse",
+    width: "100%",
+    margin: "1rem 0",
+  },
+  th: {
+    backgroundColor: "#f8f9fa",
+    border: "1px solid #dee2e6",
+    padding: "0.75rem",
+    textAlign: "left",
+  },
+  td: {
+    border: "1px solid #dee2e6",
+    padding: "0.75rem",
+    textAlign: "left",
+  },
+};
 
 const ChatMessage = ({ message, isLast }: ChatMessageProps) => {
   const isUser = message.role === "user";
@@ -15,46 +35,72 @@ const ChatMessage = ({ message, isLast }: ChatMessageProps) => {
   const isError = message.isError;
 
   const renderContent = () => {
-    if (isUser || !message.structuredContent) {
+    if (isUser) {
       return <Text>{message.content}</Text>;
     }
 
-    return (
-      <Box>
-        {/* Regular text content */}
-        {message.structuredContent.texts.map((text, index) => (
-          <Box key={`text-${index}`} mb={4}>
-            <ReactMarkdown>{text}</ReactMarkdown>
+    if (message.role === "assistant") {
+      return (
+        <Box>
+          {/* Main answer content */}
+          <Box mb={4}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {message.content}
+            </ReactMarkdown>
           </Box>
-        ))}
 
-        {/* Tables */}
-        {message.structuredContent.tables.map((table, index) => (
-          <Box key={`table-${index}`} mb={4} overflowX="auto">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{table}</ReactMarkdown>
-          </Box>
-        ))}
+          {/* Additional tables and images if present */}
+          {message.structuredContent && (
+            <>
+              {/* First table only */}
+              {message.structuredContent.tables.length > 0 && (
+                <Box mt={6}>
+                  <Box mb={4} overflowX="auto">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        table: ({ ...props }) => (
+                          <table style={tableStyles.table} {...props} />
+                        ),
+                        th: ({ ...props }) => (
+                          <th style={tableStyles.th} {...props} />
+                        ),
+                        td: ({ ...props }) => (
+                          <td style={tableStyles.td} {...props} />
+                        ),
+                      }}
+                    >
+                      {message.structuredContent.tables[0]}
+                    </ReactMarkdown>
+                  </Box>
+                </Box>
+              )}
 
-        {/* Images */}
-        {message.structuredContent.images.map((image, index) => (
-          <Box key={`image-${index}`} mb={4}>
-            <Image
-              src={`data:image/jpeg;base64,${image}`}
-              alt={`Image ${index + 1}`}
-              maxW="100%"
-              borderRadius="md"
-            />
-          </Box>
-        ))}
-
-        {/* Fallback content if no structured content is present */}
-        {!message.structuredContent.texts.length &&
-          !message.structuredContent.tables.length &&
-          !message.structuredContent.images.length && (
-            <Text>{message.content}</Text>
+              {/* Images */}
+              {message.structuredContent.images.length > 0 && (
+                <Box mt={6}>
+                  <Text fontSize="sm" color="gray.600" mb={2}>
+                    Related Images:
+                  </Text>
+                  {message.structuredContent.images.map((image, index) => (
+                    <Box key={`image-${index}`} mb={4}>
+                      <Image
+                        src={`data:image/jpeg;base64,${image}`}
+                        alt={`Image ${index + 1}`}
+                        maxW="100%"
+                        borderRadius="md"
+                      />
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </>
           )}
-      </Box>
-    );
+        </Box>
+      );
+    }
+
+    return <Text>{message.content}</Text>;
   };
 
   return (
