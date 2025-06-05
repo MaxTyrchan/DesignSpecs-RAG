@@ -17,6 +17,7 @@ import tiktoken
 
 from api.qa import router as qa_router
 from api.upload import router as upload_router
+from api.evaluation import router as evaluation_router
 
 
 @pytest.fixture(scope="session")
@@ -25,6 +26,7 @@ def app():
     app = FastAPI()
     app.include_router(upload_router, prefix="/api")
     app.include_router(qa_router, prefix="/api")
+    app.include_router(evaluation_router, prefix="/api")
 
     @app.get("/health")
     async def health_check():

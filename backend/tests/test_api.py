@@ -113,3 +113,12 @@ def test_ask_question_error_handling(test_client, monkeypatch):
         "/api/qa/ask", json={"question": "test"})  # Updated endpoint path
     assert response.status_code == 500
     assert "error" in response.json()["detail"].lower()
+
+
+def test_evaluation_endpoint(test_client):
+    """Test the evaluation data endpoint."""
+    response = test_client.get("/api/evaluation")
+    assert response.status_code == 200
+    data = response.json()
+    assert "metrics" in data
+    assert "pairs" in data

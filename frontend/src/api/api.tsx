@@ -1,3 +1,5 @@
+import { EvaluationMetric, QueryResponsePair } from "../types/evaluation";
+
 interface UploadResponse {
   message: string;
   filename: string;
@@ -19,6 +21,11 @@ export interface QAResponse {
     tables: string[];
     images: string[];
   };
+}
+
+export interface EvaluationResponse {
+  metrics: EvaluationMetric[];
+  pairs: QueryResponsePair[];
 }
 
 export default class API {
@@ -142,6 +149,15 @@ export default class API {
       });
     } catch (error) {
       console.error("Error asking question:", error);
+      throw error;
+    }
+  }
+
+  async getEvaluationData(): Promise<EvaluationResponse> {
+    try {
+      return await this.fetchWithError(`${this.baseURL}/evaluation`);
+    } catch (error) {
+      console.error("Error fetching evaluation data:", error);
       throw error;
     }
   }

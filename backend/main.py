@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from langfuse import Langfuse
 from api.upload import router as upload_router
 from api.qa import router as qa_router
+from api.evaluation import router as evaluation_router
 from langchain.storage import LocalFileStore
 from langchain.storage._lc_store import create_kv_docstore
 
@@ -40,6 +41,7 @@ app.add_middleware(
 # Include routers
 app.include_router(upload_router, prefix="/api", tags=["Document Upload"])
 app.include_router(qa_router, prefix="/api", tags=["Question Answering"])
+app.include_router(evaluation_router, prefix="/api", tags=["Evaluation"])
 
 # Health check endpoint
 
